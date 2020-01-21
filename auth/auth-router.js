@@ -1,11 +1,24 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
+const { check, validationResult } = require('express-validator')
 
 const Users = require('../routes/users/users-model');
 
 // for endpoints beginning with /api/auth
-router.post('/register', (req, res) => {
+router.post('/register', [
+  check('username', "Please Enter a Valid Username")
+  .not()
+  .isEmpty(),
+  check('password', 'Please enter a min 6 characters Password').isLength({ min: 6 })
+],
+async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+      return res.status(400).json({
+          errors: errors.array()
+      });
+  }
   let user = req.body;
   const hash = bcrypt.hashSync(user.password, 10); // 2 ^ n
   user.password = hash;
